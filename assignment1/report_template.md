@@ -52,10 +52,10 @@ Keep this section to 1-2 paragraphs.
 
 ### 1.3 Environment Setup
 <!-- Briefly describe your development environment -->
-- **Operating System**: 
-- **Python Version**: 
+- **Operating System**: Linux (5.15.0-kali2)
+- **Python Version**: 3.10.4
 - **Key Libraries Used**: 
-- **Development Tools**: 
+- **Development Tools**: Wireshark, TCPdump
 
 ---
 
