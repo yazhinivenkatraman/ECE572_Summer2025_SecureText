@@ -66,7 +66,7 @@ This report focuses on running and exploring the SecureText application and anal
 
 <!-- Replace Task X, Y, Z with actual task numbers and names  -->
 The SecureText application was explored by running the server and multiple client instances. Actions performed:
-*Created accounts with usernames and passwords
+**Created accounts with usernames and passwords**
 Sent messages between users
 Attempted password resets
 Observed system behavior during login, logout, messaging, and error handling
