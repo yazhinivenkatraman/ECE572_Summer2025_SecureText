@@ -30,9 +30,9 @@ Keep this section to 1-2 paragraphs.
 
 1. [Introduction](#introduction)
 2. [Task Implementation](#task-implementation)
-   - [Task X](#task-x)
-   - [Task Y](#task-y)
-   - [Task Z](#task-z)
+   - [Task 1: Security Vulnerability Analysis](#task-x)
+   - [Task 2: Securing Passwords at Rest](#task-y)
+   - [Task 3: Network Security and Message Authentication](#task-z)
 3. [Security Analysis](#security-analysis)
 4. [Attack Demonstrations](#attack-demonstrations)
 5. [Performance Evaluation](#performance-evaluation)
@@ -43,12 +43,15 @@ Keep this section to 1-2 paragraphs.
 ---
 
 ## 1. Introduction
+This report analyzes security and privacy vulnerabilities in the SecureText application, an intentionally insecure console-based messaging app. The primary focus is to identify fundamental security flaws, understand their implications, and lay the groundwork for secure design principles. The work done in this assignment will guide further tasks related to password storage and network message authentication.
 
 ### 1.1 Objective
 <!-- Describe the main objectives of this assignment -->
+To identify and document at least five major security and privacy vulnerabilities in the SecureText messenger application through manual testing and code analysis.
 
 ### 1.2 Scope
 <!-- Define what you implemented and what you focused on -->
+This report focuses on running and exploring the SecureText application and analyzing its vulnerabilities. Subsequent tasks on secure password storage and secure messaging will be completed later.
 
 ### 1.3 Environment Setup
 <!-- Briefly describe your development environment -->
@@ -62,6 +65,11 @@ Keep this section to 1-2 paragraphs.
 ## 2. Task Implementation
 
 <!-- Replace Task X, Y, Z with actual task numbers and names  -->
+The SecureText application was explored by running the server and multiple client instances. Actions performed:
+*Created accounts with usernames and passwords
+Sent messages between users
+Attempted password resets
+Observed system behavior during login, logout, messaging, and error handling
 
 ### 2.1 Task 1: Security Vulnerability Analysis
 
