@@ -71,10 +71,10 @@ This report focuses on running and exploring the SecureText application and anal
 #### 2.1.2 Implementation Details
 <!-- Describe your implementation approach and include the corresponding screenshots -->
 The SecureText application was explored by running the server and multiple client instances. Actions performed:
-**Created accounts with usernames and passwords**
-**Sent messages between users**
-**Attempted password resets**
-**Observed system behavior during login, logout, messaging, and error handling**
+- **Created accounts with usernames and passwords**
+- **Sent messages between users**
+- **Attempted password resets**
+- **Observed system behavior during login, logout, messaging, and error handling**
 
 **Key Components**:
 - Component 1: [Description]
