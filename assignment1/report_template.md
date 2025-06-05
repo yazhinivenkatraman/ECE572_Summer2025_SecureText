@@ -55,7 +55,7 @@ Keep this section to 1-2 paragraphs.
 - **Operating System**: Linux (5.15.0-kali2)
 - **Python Version**: 3.10.4
 - **Key Libraries Used**: 
-- **Development Tools**: Wireshark, TCPdump
+- **Development Tools**: Wireshark, TCPdump, Python
 
 ---
 
@@ -63,7 +63,7 @@ Keep this section to 1-2 paragraphs.
 
 <!-- Replace Task X, Y, Z with actual task numbers and names  -->
 
-### 2.1 Task X: [Task Name]
+### 2.1 Task 1: Security Vulnerability Analysis
 
 #### 2.1.2 Implementation Details
 <!-- Describe your implementation approach and include the corresponding screenshots -->
@@ -94,7 +94,7 @@ def key_function():
 
 ---
 
-### 2.2 Task Y: [Task Name]
+### 2.2 Task 2: Securing Passwords at Rest
 
 #### 2.2.1 Objective
 <!-- What was the goal of this task? -->
@@ -110,7 +110,7 @@ def key_function():
 
 ---
 
-### 2.3 Task Z: [Task Name]
+### 2.3 Task 3: Network Security and Message Authentication
 
 #### 2.3.1 Objective
 <!-- What was the goal of this task? -->
