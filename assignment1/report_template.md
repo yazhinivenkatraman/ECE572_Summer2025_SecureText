@@ -1,18 +1,14 @@
-# Generic Report Template for ECE 572
-
-**Use this template for all three assignments and modify if needed**
-
-**This template is made by GenAI help, if you believe some changes are required or some parts need revision, feel free to send a merge request or send an email!**
+# Report for ECE 572
 
 ---
 
 **Course**: ECE 572; Summer 2025
 **Instructor**: Dr. Ardeshir Shojaeinasab
-**Student Name**: [Your Name]  
-**Student ID**: [Your Student ID]  
-**Assignment**: [Assignment 1/2/3]  
-**Date**: [Submission Date]  
-**GitHub Repository**: [Link to **your** forked repository]
+**Student Name**: Yazhini Venkatraman  
+**Student ID**: V01049681
+**Assignment**: Assignment 1  
+**Date**: 18 June 2025  
+**GitHub Repository**: https://github.com/yazhinivenkatraman/ECE572_Summer2025_SecureText.git
 
 ---
 
