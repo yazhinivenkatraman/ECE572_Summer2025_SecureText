@@ -97,22 +97,22 @@ This snippet demonstrates a critical flaw: no verification of current user crede
 #### 2.1.3 Challenges and Solutions
 <!-- What problems did you encounter and how did you solve them? -->
 Challenge 1: After sending a message and pressing Enter, message is sent, but not able to come back to the options menu to send message, list users and logout. Cursor just stops after sending message and create new line for every Enter.
-Solution: Restarted the client; identified the lack of input flow control in send_message() as the root cause.
+**Solution:** Restarted the client; identified the lack of input flow control in send_message() as the root cause.
 
 Challenge 2: Multiple accounts were allowed to create with weak and identical passwords.
-Solution: Documented as a critical authentication weakness due to lack of password policy enforcement.
+**Solution:** Documented as a critical authentication weakness due to lack of password policy enforcement.
 
 Challenge 3: Reset password option is not secure enough. It lacks identity verification, asks for the username and directly asking for a new password, instead of current password.
-Solution: Flagged as a critical vulnerability requiring immediate reimplementation using authentication checks.
+**Solution:** Flagged as a critical vulnerability requiring immediate reimplementation using authentication checks.
 
 Challenge 4: When entered an incorrect password, no error message is displayed, instead cursor shows a new line when pressed Enter.
-Solution: Highlighted the need for secure and clear feedback mechanisms.
+**Solution:** Highlighted the need for secure and clear feedback mechanisms.
 
 Challenge 5: Session issues after logout prevented re-login. Not able to login second time, when already logged in to an user account, logout and login again.
-Solution: Identified faulty session reset logic, to be fixed in upcoming tasks.
+**Solution:** Identified faulty session reset logic, to be fixed in upcoming tasks.
 
 Challenge 6: List users option is not working as expected, not listing any available users.
-Solution: Noted as a user enumeration and access control flaw.
+**Solution:** Noted as a user enumeration and access control flaw.
 
 #### 2.1.4 Testing and Validation
 <!-- How did you test that your implementation works correctly? -->
