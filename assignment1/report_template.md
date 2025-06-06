@@ -77,9 +77,12 @@ The SecureText application was explored by running the server and multiple clien
 - **Observed system behavior during login, logout, messaging, and error handling**
 
 **Key Components**:
-- Component 1: [Description]
-- Component 2: [Description]
-- Component 3: [Description]
+- Component 1: Authentication and Account Management
+Handled via create_account() and authenticate() functions. Issues such as weak password handling, insecure reset, and broken login flow were observed here.
+- Component 2: Messaging and User Interface Flow
+Message sending logic using send_message() revealed broken input handling and UI lock after sending messages, preventing further actions.
+- Component 3: User Management and Feedback
+The list_users() function failed to return the expected list of users, and login/logout feedback was missing or ineffective.
 
 **Code Snippet** (Key Implementation):
 ```python
@@ -89,12 +92,39 @@ def key_function():
     # Your implementation
     pass
 ```
+This snippet demonstrates a critical flaw: no verification of current user credentials before resetting the password.
 
 #### 2.1.3 Challenges and Solutions
 <!-- What problems did you encounter and how did you solve them? -->
+Challenge 1: After sending a message and pressing Enter, message is sent, but not able to come back to the options menu to send message, list users and logout. Cursor just stops after sending message and create new line for every Enter.
+Solution: Restarted the client; identified the lack of input flow control in send_message() as the root cause.
+
+Challenge 2: Multiple accounts were allowed to create with weak and identical passwords.
+Solution: Documented as a critical authentication weakness due to lack of password policy enforcement.
+
+Challenge 3: Reset password option is not secure enough. It lacks identity verification, asks for the username and directly asking for a new password, instead of current password.
+Solution: Flagged as a critical vulnerability requiring immediate reimplementation using authentication checks.
+
+Challenge 4: When entered an incorrect password, no error message is displayed, instead cursor shows a new line when pressed Enter.
+Solution: Highlighted the need for secure and clear feedback mechanisms.
+
+Challenge 5: Session issues after logout prevented re-login. Not able to login second time, when already logged in to an user account, logout and login again.
+Solution: Identified faulty session reset logic, to be fixed in upcoming tasks.
+
+Challenge 6: List users option is not working as expected, not listing any available users.
+Solution: Noted as a user enumeration and access control flaw.
 
 #### 2.1.4 Testing and Validation
 <!-- How did you test that your implementation works correctly? -->
+The application was tested manually across multiple terminals with varying user behaviors. The following test cases were executed:
+
+TC1: Created accounts using short, common passwords (e.g., "12345") → Allowed without restriction.
+TC2: Reset password for another user without login or verification → Success, no checks performed.
+TC3: Logged in with invalid credentials → No error message shown, only cursor moves to a new line.
+TC4: Sent message to a non-existent user → Application accepts it; no validation.
+TC5: Attempted to log in again after logging out → No response from system; session seems broken.
+TC6: Used list_users command → Returned empty list even though users existed.
+TC7: Sent a message and pressed Enter repeatedly → Menu did not return; stuck in a loop.
 
 **Test Cases**
 **Evidence**:
