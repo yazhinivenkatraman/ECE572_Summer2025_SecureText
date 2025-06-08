@@ -86,16 +86,16 @@ This exploration revealed several functional and security-related issues, which 
 
 #### Vulnerability 1: Weak Password Policy
 ##### Vulnerability and its location in the code:
-Passwords can be as short as 1 character. No password strength checks exist in create_account().
+- Passwords can be as short as 1 character. No password strength checks exist in create_account().
 
 ##### Potential impact if exploited by an attacker:
-Makes it easy for attackers to brute-force passwords and compromise accounts.
+- Makes it easy for attackers to brute-force passwords and compromise accounts.
 
 ##### Relevant security principles from course materials:
-Secure Defaults, Authentication
+- Secure Defaults, Authentication
 
 ##### Category:
-Authentication
+- Authentication
 
 #### Vulnerability 2: Insecure Password Reset
 ##### Vulnerability and its location in the code:
