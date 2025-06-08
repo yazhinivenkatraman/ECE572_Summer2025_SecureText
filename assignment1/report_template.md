@@ -242,9 +242,23 @@ print(f"{response['message']}")
 **What they could achieve if successful**
 **Final thoughts and consideration**
 
-Deliverables
-Vulnerability Report: Detailed analysis of identified weaknesses
-Attack Scenarios: Realistic exploitation scenarios
+#### Vulnerability 1: Weak Password Policy
+**What they would need to carry out the attack:**
+- A script or tool to brute-force login credentials (e.g., Hydra or a custom Python script)
+- A known or guessed username (e.g., “admin”, “test”, etc.)
+
+**What they could achieve if successful:**
+- Gain unauthorized access to a user account using a short, easily guessed password like a or 123
+- View, send, or reset messages pretending to be that user
+
+**Final thoughts and consideration:**
+- The lack of password strength requirements makes the system extremely vulnerable to brute-force and dictionary attacks. Enforcing minimum password length and complexity is essential.
+
+#### Vulnerability 2: Insecure Password Reset
+#### Vulnerability 3: No Recipient Username Validation Before Messaging
+#### Vulnerability 4: Broken Login/Logout Session Flow
+#### Vulnerability 5. User Listing Not Working
+#### Vulnerability 6. Application Freezes After Sending Message
 
 ### 2.2 Task 2: Securing Passwords at Rest
 
