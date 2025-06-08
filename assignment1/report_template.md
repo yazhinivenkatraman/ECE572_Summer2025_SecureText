@@ -80,12 +80,20 @@ This exploration revealed several functional and security-related issues, which 
 #### 2.1.2 Vulnerability Analysis: Identify and document at least 5 major security and privacy vulnerabilities in the application. For each vulnerability:
 
 **Describe the vulnerability and its location in the code**
-
 **Explain the potential impact if exploited by an attacker**
-
 **Reference relevant security principles from course materials**
-
 **Categorize the vulnerability (e.g., authentication, authorization, data protection, etc.)**
+
+| # | Vulnerability                          | Description                                                                                          | Impact                                                                 | Security Principle Violated     | Category          |
+|---|----------------------------------------|------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|----------------------------------|-------------------|
+| 1 | Weak password policy                   | Passwords can be as short as 1 character. No strength checks in `create_account()`.                 | Enables easy brute-force or guessable passwords.                      | Secure Defaults, Authentication | Authentication     |
+| 2 | Insecure password reset                | Password reset only needs a username in `reset_password()` — no identity verification.              | Allows attackers to hijack accounts by resetting passwords.           | Authentication, Data Protection | Authentication     |
+| 3 | No feedback on failed login            | Failed login shows no error, only a new line. Located in `authenticate()`.                          | Misleads users and enables silent brute-force attempts.               | Fail Secure                     | Usability / Auth   |
+| 4 | No username validation for messaging   | `send_message()` doesn’t check if the recipient exists before sending.                              | Messages sent to invalid users are dropped or misused.                | Input Validation, Authorization | Authorization      |
+| 5 | Broken login/logout session flow       | After logout, re-login fails. Client state isn't properly reset.                                    | Prevents legitimate re-login; user must restart client.               | Session Management              | Auth / Availability |
+| 6 | List users not functioning             | The `LIST_USERS` feature doesn’t return correct online/all users list.                              | Users can’t discover others, breaking communication flow.             | Least Privilege, Feedback       | Authorization      |
+| 7 | Stuck after message send               | Post message send, user can't return to menu. UI hang in `send_message()` loop.                     | Blocks user from accessing other features; effectively DoS.           | Fail Secure, Robustness         | Usability          |
+
 
 #### 2.1.3 Attack Scenarios: For each identified vulnerability, describe a realistic client-server attack scenario explaining:
 
