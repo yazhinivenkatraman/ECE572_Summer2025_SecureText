@@ -74,7 +74,7 @@ The SecureText console application was launched and interacted using the termina
 - Sent messages between users.
 - Attempted to send messages to non-existent users.
 - Triggered password reset flow.
-- Tested user listing and interface behavior after messaging.
+- Tested user listing and interface behavior after messaging.  
 This exploration revealed several functional and security-related issues, which are detailed below.
 
 #### 2.1.2 Vulnerability Analysis: Identify and document at least 5 major security and privacy vulnerabilities in the application. For each vulnerability:
