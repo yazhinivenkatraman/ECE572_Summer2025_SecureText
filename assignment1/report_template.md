@@ -88,7 +88,7 @@ This exploration revealed several functional and security-related issues, which 
 ##### Vulnerability and its location in the code:
 - Passwords can be as short as 1 character. No password strength checks exist in create_account().
 
-```python
+```
 def create_account(self, username, password):
     """Create new user account - stores password in PLAINTEXT!"""
     if username in self.users:
@@ -103,6 +103,7 @@ def create_account(self, username, password):
     }
     self.save_users()
     return True, "Account created successfully"
+```
 
 
 ##### Potential impact if exploited by an attacker:
