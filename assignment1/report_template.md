@@ -85,81 +85,81 @@ This exploration revealed several functional and security-related issues, which 
 **Categorize the vulnerability (e.g., authentication, authorization, data protection, etc.)**
 
 #### Vulnerability 1: Weak Password Policy
-**Vulnerability and its location in the code:**
+##### Vulnerability and its location in the code:
 Passwords can be as short as 1 character. No password strength checks exist in create_account().
 
-**Potential impact if exploited by an attacker:**
+##### Potential impact if exploited by an attacker:
 Makes it easy for attackers to brute-force passwords and compromise accounts.
 
-**Relevant security principles from course materials:**
+##### Relevant security principles from course materials:
 Secure Defaults, Authentication
 
-**Category:**
+##### Category:
 Authentication
 
 #### Vulnerability 2: Insecure Password Reset
-**Vulnerability and its location in the code:**
+##### Vulnerability and its location in the code:
 In reset_password(), only the username is required to reset a password. The current password is not verified.
 
-**Potential impact if exploited by an attacker:**
+##### Potential impact if exploited by an attacker:
 An attacker can hijack any account by resetting the password with just the username.
 
-**Relevant security principles from course materials:**
+##### Relevant security principles from course materials:
 Authentication, Data Protection
 
-**Category:**
+##### Category:
 Authentication
 
 #### Vulnerability 3: No Username Validation Before Messaging
-**Vulnerability and its location in the code:**
+##### Vulnerability and its location in the code:
 In the send_message() function, the recipient username is not validated before sending a message.
 
-**Potential impact if exploited by an attacker:**
+##### Potential impact if exploited by an attacker:
 Messages could be silently dropped or used to probe for valid usernames, potentially leaking metadata.
 
-**Relevant security principles from course materials**
+##### Relevant security principles from course materials
 Input Validation, Authorization
 
-**Category:**
+##### Category:
 Authorization
 
 #### Vulnerability 4: Broken Login/Logout Session Flow
-**Vulnerability and its location in the code:**
+##### Vulnerability and its location in the code:
 After a user logs out, attempting to log in again does not work as expected. Likely a bug in session state handling within the client loop.
 
-**Potential impact if exploited by an attacker:**
+##### Potential impact if exploited by an attacker:
 Prevents legitimate re-logins, leading to denial-of-service for valid users.
 
-**Relevant security principles from course materials:**
+##### Relevant security principles from course materials:
 Session Management
 
-**Category:**
+##### Category:
 Authentication / Availability
 
 #### Vulnerability 5. User Listing Not Working
-**Vulnerability and its location in the code:**
+##### Vulnerability and its location in the code:
 The LIST_USERS command does not return any user data, despite accounts being created. Server-side logic fails to display users.
 
-**Potential impact if exploited by an attacker:**
+##### Potential impact if exploited by an attacker:
 Users cannot discover or connect with others, disrupting communication flow.
 
-**Relevant security principles from course materials:**
+##### Relevant security principles from course materials:
 Least Privilege, Secure Feedback
 
-**Category:**
+##### Category:
 Authorization
 
 #### Vulnerability 6. Application Freezes After Sending Message
-**Vulnerability and its location in the code:**
+##### Vulnerability and its location in the code:
 After using the send_message() feature, the user cannot return to the menu. The UI remains unresponsive and traps the input.
 
-**Potential impact if exploited by an attacker:**
+##### Potential impact if exploited by an attacker:
 Prevents user from performing further actions like logging out or listing users; effectively acts as a denial of service.
 
-**Relevant security principles from course materials:**
+##### Relevant security principles from course materials:
 Fail Secure, Robustness
 
-**Category:**
+##### Category:
 Usability
 
 
