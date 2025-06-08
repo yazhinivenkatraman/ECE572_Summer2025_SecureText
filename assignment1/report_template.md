@@ -84,14 +84,83 @@ This exploration revealed several functional and security-related issues, which 
 **Reference relevant security principles from course materials**
 **Categorize the vulnerability (e.g., authentication, authorization, data protection, etc.)**
 
-| # | Vulnerability                          | Description                                                                                          | Impact                                                                 | Security Principle Violated     | Category          |
-|---|----------------------------------------|------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|----------------------------------|-------------------|
-| 1 | Weak password policy                   | Passwords can be as short as 1 character. Valid password verification is not available. `create_account()`.                 | Enables easy brute-force attack.                      | Secure Defaults, Authentication | Authentication     |
-| 2 | Insecure password reset                | Reset password option is not secure enough. It asks for the username and directly asking for a new password, instead of current password.              | Allows attackers to hijack accounts by resetting passwords.           | Authentication, Data Protection | Authentication     |
-| 3 | No username validation for messaging   | Username verification is not present before sending a message. `send_message()` doesn’t check if the recipient exists   | Messages sent to invalid users are dropped or misused.                | Input Validation, Authorization | Authorization      |
-| 4 | Broken login/logout session flow       | After logout, re-login fails. Not able to logout and login second time, when a user is already logged in to an account. | Prevents legitimate re-login; user must restart client.               | Session Management              | Auth / Availability |
-| 5 | List users not functioning             | List users option is not working as expected, not listing any available users. | Users can’t discover others, breaking communication flow.             | Least Privilege, Feedback       | Authorization      |
-| 6 | Stuck after message send               | Post message send, user can't return to menu. UI hang in `send_message()` loop.                     | Blocks user from accessing other features; effectively DoS.           | Fail Secure, Robustness         | Usability          |
+##### Vulnerability 1: Weak Password Policy
+**Vulnerability and its location in the code:**
+Passwords can be as short as 1 character. No password strength checks exist in create_account().
+
+**Potential impact if exploited by an attacker:**
+Makes it easy for attackers to brute-force passwords and compromise accounts.
+
+**Relevant security principles from course materials:**
+Secure Defaults, Authentication
+
+**Category:**
+Authentication
+
+##### Vulnerability 2: Insecure Password Reset
+**Vulnerability and its location in the code:**
+In reset_password(), only the username is required to reset a password. The current password is not verified.
+
+**Potential impact if exploited by an attacker:**
+An attacker can hijack any account by resetting the password with just the username.
+
+**Relevant security principles from course materials:**
+Authentication, Data Protection
+
+**Category:**
+Authentication
+
+##### Vulnerability 3: No Username Validation Before Messaging
+**Vulnerability and its location in the code:**
+In the send_message() function, the recipient username is not validated before sending a message.
+
+**Potential impact if exploited by an attacker:**
+Messages could be silently dropped or used to probe for valid usernames, potentially leaking metadata.
+
+**Relevant security principles from course materials**
+Input Validation, Authorization
+
+**Category:**
+Authorization
+
+##### Vulnerability 4: Broken Login/Logout Session Flow
+**Vulnerability and its location in the code:**
+After a user logs out, attempting to log in again does not work as expected. Likely a bug in session state handling within the client loop.
+
+**Potential impact if exploited by an attacker:**
+Prevents legitimate re-logins, leading to denial-of-service for valid users.
+
+**Relevant security principles from course materials:**
+Session Management
+
+**Category:**
+Authentication / Availability
+
+##### Vulnerability 5. User Listing Not Working
+**Vulnerability and its location in the code:**
+The LIST_USERS command does not return any user data, despite accounts being created. Server-side logic fails to display users.
+
+**Potential impact if exploited by an attacker:**
+Users cannot discover or connect with others, disrupting communication flow.
+
+**Relevant security principles from course materials:**
+Least Privilege, Secure Feedback
+
+**Category:**
+Authorization
+
+##### Vulnerability 6. Application Freezes After Sending Message
+**Vulnerability and its location in the code:**
+After using the send_message() feature, the user cannot return to the menu. The UI remains unresponsive and traps the input.
+
+**Potential impact if exploited by an attacker:**
+Prevents user from performing further actions like logging out or listing users; effectively acts as a denial of service.
+
+**Relevant security principles from course materials:**
+Fail Secure, Robustness
+
+**Category:**
+Usability
 
 
 #### 2.1.3 Attack Scenarios: For each identified vulnerability, describe a realistic client-server attack scenario explaining:
