@@ -119,6 +119,18 @@ def create_account(self, username, password):
 ##### Vulnerability and its location in the code:
 - In reset_password(), only the username is required to reset a password. The current password is not verified.
 
+```
+    def reset_password(self, username, new_password):
+        """Basic password reset - just requires existing username"""
+        if username not in self.users:
+            return False, "Username not found"
+        
+        # SECURITY VULNERABILITY: No proper verification for password reset!
+        self.users[username]['password'] = new_password
+        self.save_users()
+        return True, "Password reset successful"
+```
+
 ##### Potential impact if exploited by an attacker:
 - An attacker can hijack any account by resetting the password with just the username.
 
@@ -128,9 +140,22 @@ def create_account(self, username, password):
 ##### Category:
 - Authentication
 
-#### Vulnerability 3: No Username Validation Before Messaging
+#### Vulnerability 3: No Recipient Username Validation Before Messaging
 ##### Vulnerability and its location in the code:
 - In the send_message() function, the recipient username is not validated before sending a message.
+
+```
+elif command == 'SEND_MESSAGE':
+   if ...
+   else:
+      recipient = message.get('recipient')
+      ...               
+      # Send message to recipient if they're online
+      if recipient in self.active_connections:
+         ...
+         try:
+            self.active_connections[recipient].send(...)
+```
 
 ##### Potential impact if exploited by an attacker:
 - Messages could be silently dropped or used to probe for valid usernames, potentially leaking metadata.
@@ -144,6 +169,21 @@ def create_account(self, username, password):
 #### Vulnerability 4: Broken Login/Logout Session Flow
 ##### Vulnerability and its location in the code:
 - After a user logs out, attempting to log in again does not work as expected. Likely a bug in session state handling within the client loop.
+- Re-login might fail due to stale socket/thread state after logout.
+
+```
+print("3. Logout")
+...
+   elif choice == '3':
+      self.logged_in = False
+      self.running = False
+      self.username = None
+      print("Logged out successfully")
+...        
+if self.socket:
+   self.socket.close()
+   print("Goodbye!")
+```
 
 ##### Potential impact if exploited by an attacker:
 - Prevents legitimate re-logins, leading to denial-of-service for valid users.
@@ -157,6 +197,15 @@ def create_account(self, username, password):
 #### Vulnerability 5. User Listing Not Working
 ##### Vulnerability and its location in the code:
 - The LIST_USERS command does not return any user data, despite accounts being created. Server-side logic fails to display users.
+- This logic is present, but either the connection is not active or message handling fails on client side.
+
+```
+elif command == 'LIST_USERS':
+...
+   else:
+      online_users = list(self.active_connections.keys())
+      all_users = list(self.users.keys())
+```
 
 ##### Potential impact if exploited by an attacker:
 - Users cannot discover or connect with others, disrupting communication flow.
@@ -170,6 +219,12 @@ def create_account(self, username, password):
 #### Vulnerability 6. Application Freezes After Sending Message
 ##### Vulnerability and its location in the code:
 - After using the send_message() feature, the user cannot return to the menu. The UI remains unresponsive and traps the input.
+- The UI does not restore prompt after sending message.
+
+```
+response = self.send_command(command)
+print(f"{response['message']}")
+```
 
 ##### Potential impact if exploited by an attacker:
 - Prevents user from performing further actions like logging out or listing users; effectively acts as a denial of service.
