@@ -84,7 +84,7 @@ This exploration revealed several functional and security-related issues, which 
 **Reference relevant security principles from course materials**
 **Categorize the vulnerability (e.g., authentication, authorization, data protection, etc.)**
 
-##### Vulnerability 1: Weak Password Policy
+#### Vulnerability 1: Weak Password Policy
 **Vulnerability and its location in the code:**
 Passwords can be as short as 1 character. No password strength checks exist in create_account().
 
@@ -97,7 +97,7 @@ Secure Defaults, Authentication
 **Category:**
 Authentication
 
-##### Vulnerability 2: Insecure Password Reset
+#### Vulnerability 2: Insecure Password Reset
 **Vulnerability and its location in the code:**
 In reset_password(), only the username is required to reset a password. The current password is not verified.
 
@@ -110,7 +110,7 @@ Authentication, Data Protection
 **Category:**
 Authentication
 
-##### Vulnerability 3: No Username Validation Before Messaging
+#### Vulnerability 3: No Username Validation Before Messaging
 **Vulnerability and its location in the code:**
 In the send_message() function, the recipient username is not validated before sending a message.
 
@@ -123,7 +123,7 @@ Input Validation, Authorization
 **Category:**
 Authorization
 
-##### Vulnerability 4: Broken Login/Logout Session Flow
+#### Vulnerability 4: Broken Login/Logout Session Flow
 **Vulnerability and its location in the code:**
 After a user logs out, attempting to log in again does not work as expected. Likely a bug in session state handling within the client loop.
 
@@ -136,7 +136,7 @@ Session Management
 **Category:**
 Authentication / Availability
 
-##### Vulnerability 5. User Listing Not Working
+#### Vulnerability 5. User Listing Not Working
 **Vulnerability and its location in the code:**
 The LIST_USERS command does not return any user data, despite accounts being created. Server-side logic fails to display users.
 
@@ -149,7 +149,7 @@ Least Privilege, Secure Feedback
 **Category:**
 Authorization
 
-##### Vulnerability 6. Application Freezes After Sending Message
+#### Vulnerability 6. Application Freezes After Sending Message
 **Vulnerability and its location in the code:**
 After using the send_message() feature, the user cannot return to the menu. The UI remains unresponsive and traps the input.
 
