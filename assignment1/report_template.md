@@ -88,6 +88,18 @@ This exploration revealed several functional and security-related issues, which 
 ##### Vulnerability and its location in the code:
 - Passwords can be as short as 1 character. No password strength checks exist in create_account().
 
+'''def create_account(self, username, password):
+        if username in self.users:
+            return False, "Username already exists"        
+        self.users[username] = {
+            'password': password,  # PLAINTEXT PASSWORD!
+            'created_at': datetime.now().isoformat(),
+            'reset_question': 'What is your favorite color?',
+            'reset_answer': 'blue'  # Default for simplicity
+        }
+        self.save_users()
+        return True, "Account created successfully"'''
+
 ##### Potential impact if exploited by an attacker:
 - Makes it easy for attackers to brute-force passwords and compromise accounts.
 
