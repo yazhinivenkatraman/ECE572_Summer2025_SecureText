@@ -317,21 +317,65 @@ elif command == 'LIST_USERS':
 **Final thoughts and consideration:**
 - This is more of a usability and robustness issue but can still lead to an unintentional denial-of-service. Input loops must be correctly managed.
 
+
 ### 2.2 Task 2: Securing Passwords at Rest
 
-#### 2.2.1 Objective
-<!-- What was the goal of this task? -->
+#### Part A: Password Hashing Implementation
+#### 1. Replace Plaintext Storage:
 
-#### 2.2.2 Implementation Details
-<!-- Describe your implementation approach -->
+**Modify the create_account() method to hash passwords before storing**
+```
+def create_account(self, username, password):
+        """Create new user account - stores password in PLAINTEXT!"""
+        if username in self.users:
+            return False, "Username already exists"
+        
+        # Hash the password using SHA-256
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
 
-#### 2.2.3 Challenges and Solutions
-<!-- What problems did you encounter and how did you solve them? -->
+        # SECURITY VULNERABILITY: Storing password in plaintext!
+        self.users[username] = {
+            'password': password_hash,  # PLAINTEXT PASSWORD!
+            'created_at': datetime.now().isoformat(),
+            'reset_question': 'What is your favorite color?',
+            'reset_answer': 'blue'  # Default for simplicity
+        }
+        self.save_users()
+        return True, "Account created successfully"
+```
 
-#### 2.2.4 Testing and Validation
-<!-- How did you test that your implementation works correctly? -->
+**Update the authenticate() method to compare hashed passwords**
+```
+def authenticate(self, username, password):
+        """Authenticate user with plaintext password comparison"""
+        if username not in self.users:
+            return False, "Username not found"
+        
+        # Hash the entered password before comparison
+        entered_hash = hashlib.sha256(password.encode()).hexdigest()
+        stored_hash = self.users[username]['password']
 
----
+        # SECURITY VULNERABILITY: Plaintext password comparison!
+        if entered_hash == stored_hash:
+            return True, "Authentication successful"
+        else:
+            return False, "Invalid password"
+```
+
+**Use SHA-256 initially, then discuss its limitations**
+- SHA-256 provides a secure hashing function, it is not ideal for password storage because it is too fast and lacks built-in protections against brute-force attacks.
+- In future tasks, this implementation should be replaced with a slow hashing algorithm like PBKDF2, bcrypt, scrypt, or Argon2, which incorporate computational delays, salting to resist dictionary attacks and rainbow table attacks.
+
+#### 2. Implement Slow Hashing:
+
+**Research and implement a slow hash function (PBKDF2, bcrypt, scrypt, or Argon2)**
+
+
+**Justify your choice of hash function and parameters**
+Here using bcrypt as the hasing function, it does slow hashing, very effective for securing password and provides in-build salting function.
+
+**Demonstrate the time difference between fast and slow hashing**
+
 
 ### 2.3 Task 3: Network Security and Message Authentication
 
