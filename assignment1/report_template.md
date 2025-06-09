@@ -238,27 +238,75 @@ print(f"{response['message']}")
 
 #### 2.1.3 Attack Scenarios: For each identified vulnerability, describe a realistic client-server attack scenario explaining:
 
-**What they would need to carry out the attack**
-**What they could achieve if successful**
-**Final thoughts and consideration**
-
 #### Vulnerability 1: Weak Password Policy
 **What they would need to carry out the attack:**
-- A script or tool to brute-force login credentials (e.g., Hydra or a custom Python script)
-- A known or guessed username (e.g., “admin”, “test”, etc.)
+- A tool to brute-force login credentials (e.g., Hydra)
+- A known or guessed username (e.g., “admin”, “test”, etc.)                                 
 
 **What they could achieve if successful:**
-- Gain unauthorized access to a user account using a short, easily guessed password like a or 123
-- View, send, or reset messages pretending to be that user
+- Gain unauthorized access to a user account using a short, easily guessed password like a or 123.
+- Send messages, list all the users pretending to be that user.
 
 **Final thoughts and consideration:**
 - The lack of password strength requirements makes the system extremely vulnerable to brute-force and dictionary attacks. Enforcing minimum password length and complexity is essential.
 
 #### Vulnerability 2: Insecure Password Reset
+**What they would need to carry out the attack:**
+A valid username is needed to carry out the attack (which may be easy to guess or obtained from prior reconnaissance)
+
+**What they could achieve if successful:**
+Reset the password of an existing user and gain full control over their account.
+Block the original user from accessing their own account.
+Able to listen to messages which are directed to this user account.
+
+**Final thoughts and consideration:**
+Without verifying the current password or using security questions/other verification, the password reset process is critically flawed. This is a common real-world vulnerability.
+
 #### Vulnerability 3: No Recipient Username Validation Before Messaging
+**What they would need to carry out the attack:**
+A logged-in user session is needed.
+The ability to send a message to any arbitrary or non-existent username.
+
+**What they could achieve if successful:**
+Waste system resources by sending messages to non-existent users.
+Enumerate valid usernames (via trial and error), aiding further user attacks by resetting password.
+Cause confusion or loss of messages due to misdirected communication.
+
+**Final thoughts and consideration:**
+The application should verify that recipients exist and give clear error feedback. This affects both usability and security.
+
 #### Vulnerability 4: Broken Login/Logout Session Flow
+**What they would need to carry out the attack:**
+A user logged in once and then logged out
+Attempt to log in again during the same session
+
+**What they could achieve if successful:**
+Unable to re-login into same account, without restarting the application.
+Causes denial of service (DoS) for the user and may discourage legitimate use.
+
+**Final thoughts and consideration:**
+Poor session handling affects availability and usability. User logout should clear the session state completely and allow re-authentication properly.
+
 #### Vulnerability 5. User Listing Not Working
+**What they would need to carry out the attack:**
+A logged-in user attempting to view the list of online or registered users using the LIST_USERS command.
+
+**What they could achieve if successful:**
+Users can't discover others to message, breaking communication
+Limits ability to verify if other users are online or valid
+
+**Final thoughts and consideration:**
+Listing users is essential for usability in a chat application. If not working, it indirectly affects both authorization (knowing who is active) and user trust.
+
 #### Vulnerability 6. Application Freezes After Sending Message
+**What they would need to carry out the attack:**
+A user logged in, using the send_message() function to send a message to another user.
+
+**What they could achieve if successful:**
+Once a message is sent, the user is stuck without a way to continue using the app, essentially locking them out of further actions.
+
+**Final thoughts and consideration:**
+This is more of a usability and robustness issue but can still lead to an unintentional denial-of-service. Input loops must be correctly managed.
 
 ### 2.2 Task 2: Securing Passwords at Rest
 
