@@ -216,24 +216,33 @@ elif command == 'LIST_USERS':
 ##### Category:
 - Authorization
 
-#### Vulnerability 6. Application Freezes After Sending Message
+#### Vulnerability 6. Plaintext Password Storage
 ##### Vulnerability and its location in the code:
-- After using the send_message() feature, the user cannot return to the menu. The UI remains unresponsive and traps the input.
-- The UI does not restore prompt after sending message.
+- The application stores user passwords in plaintext without any hashing or salting.
+- The vulnerability is present in the create_account() method in the SecureTextServer class:
 
 ```
-response = self.send_command(command)
-print(f"{response['message']}")
+# SECURITY VULNERABILITY: Storing password in plaintext!
+        self.users[username] = {
+            'password': password,  # PLAINTEXT PASSWORD!
+            'created_at': datetime.now().isoformat(),
+            'reset_question': 'What is your favorite color?',
+            'reset_answer': 'blue'  # Default for simplicity
+        }
+        self.save_users()
 ```
 
 ##### Potential impact if exploited by an attacker:
-- Prevents user from performing further actions like logging out or listing users; effectively acts as a denial of service.
+- If the users.json file is accessed (e.g., by a malicious server admin or via a file read vulnerability), all user credentials are compromised instantly.
+- Attackers can reuse passwords across other platforms where users may have used the same password.
 
 ##### Relevant security principles from course materials:
-- Fail Secure, Robustness
+- Data Protection
+- Defense in Depth
+- Authentication
 
 ##### Category:
-- Usability
+- Data Protection / Authentication
 
 
 #### 2.1.3 Attack Scenarios: For each identified vulnerability, describe a realistic client-server attack scenario explaining:
