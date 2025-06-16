@@ -21,7 +21,16 @@ import time
 from datetime import datetime
 import hashlib
 import bcrypt
+import time
+import base64
 
+
+# Pre-shared key
+SHARED_KEY = b'secretkey123'
+
+# Helper function for flawed MAC
+def generate_flawed_mac(message: str) -> str:
+    return hashlib.md5(SHARED_KEY + message.encode()).hexdigest()
 
 class SecureTextServer:
     def __init__(self, host='localhost', port=12345):
@@ -31,6 +40,7 @@ class SecureTextServer:
         self.users = self.load_users()
         self.active_connections = {}  # username -> connection
         self.server_socket = None
+        test_hashing_time()
         
     def load_users(self):
         """Load users from JSON file or create empty dict if file doesn't exist"""
@@ -56,11 +66,22 @@ class SecureTextServer:
             return False, "Username already exists"
         
         # Hash the password using SHA-256
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        #password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+        # Hash the passeord using bcrypt - generate salting
+        #password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+        # Updating password hashing to generate 128-bit (16-byte) and store salt manually.
+        salt = base64.b64encode(os.urandom(16)).decode()
+    
+        # Initially combining salt and password, then hashing using bcrypt
+        salted_password = password + salt
+        password_hash = bcrypt.hashpw(salted_password.encode(), bcrypt.gensalt()).decode()
 
         # SECURITY VULNERABILITY: Storing password in plaintext!
         self.users[username] = {
             'password': password_hash,  # PLAINTEXT PASSWORD!
+            'salt': salt,
             'created_at': datetime.now().isoformat(),
             'reset_question': 'What is your favorite color?',
             'reset_answer': 'blue'  # Default for simplicity
@@ -74,14 +95,43 @@ class SecureTextServer:
             return False, "Username not found"
         
         # Hash the entered password before comparison
-        entered_hash = hashlib.sha256(password.encode()).hexdigest()
-        stored_hash = self.users[username]['password']
+        #entered_hash = hashlib.sha256(password.encode()).hexdigest()
+        #stored_hash = self.users[username]['password']
 
         # SECURITY VULNERABILITY: Plaintext password comparison!
-        if entered_hash == stored_hash:
+        #if entered_hash == stored_hash:
+
+        stored_hash = self.users[username]['password']
+        stored_salt = self.users[username].get('salt')
+
+        if not stored_salt:
+            # return False, "Salt missing for user. Migration required."
+            
+            # Updating authentication for legacy users, to successful login and update salt later.
+            legacy_hash = hashlib.sha256(password.encode()).hexdigest()
+
+            if legacy_hash == stored_hash:
+                new_salt = base64.b64encode(os.urandom(16)).decode()
+    
+                # Initially combining salt and password, then hashing using bcrypt
+                salted_password = password + new_salt
+                new_hash = bcrypt.hashpw(salted_password.encode(), bcrypt.gensalt()).decode()
+                self.users[username]['password'] = new_hash
+                self.users[username]['salt'] = new_salt
+                self.save_users()
+                return True, "Authentication successful - Legacy user migrated"
+            else:
+                return False, "Invalid password"
+            
+        # Recreate hash using stored salt
+        salted_password = password + stored_salt
+
+        # Modern user - verify hashed password using bcrypt
+        if bcrypt.checkpw(salted_password.encode(), stored_hash.encode()):
             return True, "Authentication successful"
         else:
             return False, "Invalid password"
+
     
     def reset_password(self, username, new_password):
         """Basic password reset - just requires existing username"""
@@ -89,7 +139,12 @@ class SecureTextServer:
             return False, "Username not found"
         
         # SECURITY VULNERABILITY: No proper verification for password reset!
-        self.users[username]['password'] = new_password
+        #self.users[username]['password'] = new_password
+
+        # While resetting the password, storing it as bcrypt hashed password
+        new_password_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+        self.users[username]['password'] = new_password_hash
+
         self.save_users()
         return True, "Password reset successful"
     
@@ -129,14 +184,19 @@ class SecureTextServer:
                         else:
                             recipient = message.get('recipient')
                             msg_content = message.get('content')
+                            mac = message.get('mac')
                             
                             # Send message to recipient if they're online
-                            if recipient in self.active_connections:
+                            expected_mac = generate_flawed_mac(msg_content)
+                            if mac != expected_mac:
+                                response = {'status': 'error', 'message': 'MAC verification failed'}
+                            elif recipient in self.active_connections:
                                 msg_data = {
                                     'type': 'MESSAGE',
                                     'from': current_user,
                                     'content': msg_content,
-                                    'timestamp': datetime.now().isoformat()
+                                    'timestamp': datetime.now().isoformat(),
+                                    'mac': mac
                                 }
                                 try:
                                     self.active_connections[recipient].send(
@@ -249,7 +309,13 @@ class SecureTextClient:
                 if data:
                     message = json.loads(data)
                     if message.get('type') == 'MESSAGE':
-                        print(f"\n[{message['timestamp']}] {message['from']}: {message['content']}")
+                        # Added MAC verification in Client
+                        expected_mac = generate_flawed_mac(message['content'])
+                        if message.get('mac') == expected_mac:
+                            print(f"\n[{message['timestamp']}] {message['from']}: {message['content']} (MAC verified)")
+                        else:
+                            print(f"\n[{message['timestamp']}] {message['from']}: {message['content']} (MAC failed)")
+
                         print(">> ", end="", flush=True)
             except:
                 break
@@ -306,16 +372,26 @@ class SecureTextClient:
         
         print("\n=== Send Message ===")
         recipient = input("Enter recipient username: ").strip()
-        content = input("Enter message: ").strip()
+        msg_type = input("Is this a command message? (y/n): ").strip().lower()
+
+        if msg_type == 'y':
+            # Command message
+            content = input("Enter command (e.g., CMD=SET_QUOTA&USER=bob&LIMIT=100): ").strip()
+        else:
+            content = input("Enter regular message: ").strip()
         
         if not recipient or not content:
             print("Recipient and message cannot be empty!")
             return
         
+        # Add MAC for message authentication
+        mac = generate_flawed_mac(content)
+        
         command = {
             'command': 'SEND_MESSAGE',
             'recipient': recipient,
-            'content': content
+            'content': content,
+            'mac': mac
         }
         
         response = self.send_command(command)
@@ -403,6 +479,27 @@ class SecureTextClient:
         if self.socket:
             self.socket.close()
         print("Goodbye!")
+
+# Utility function for testing the hashing speed in SHA-256 and bcrypt methods
+def test_hashing_time():
+    check_hash_time = input("Enter 1 to test SHA-256 & bcrypt hashing time orelse enter 0: ")
+    if check_hash_time == "1":
+        # Using sample password to check the timing difference
+        password = "TestP@$$word123"
+
+        # Time taken for SHA-256 hashing technique
+        start = time.time()
+        password_hash = hashlib.sha256(password.encode()).hexdigest() 
+        end = time.time()
+        print("SHA-256 hashing took " + str(float(end - start)) + " seconds")
+
+        # Time taken for Bcrypt hashing technique
+        start = time.time()
+        password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        end = time.time()
+        print("Bcrypt hashing took " + str(float(end - start)) + " seconds")
+    else:
+        pass
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'server':
