@@ -695,6 +695,7 @@ def generate_flawed_mac(message, key):
             'recipient': recipient,
             'content': content,
             'mac': mac
+        }
 ```
 
 **Server – Verify MAC**
@@ -714,18 +715,47 @@ else:
 
 
 ### Part C: Length Extension Attack
-Implement Vulnerable MAC:
+#### Implement Vulnerable MAC:
 
-Implement the flawed MAC construction MAC(k,m) = MD5(k||m) exactly as described in course notes
-Use the Merkle-Damgård construction vulnerability
-Create a message format that supports commands: "CMD=SET_QUOTA&USER=bob&LIMIT=100"
-Length Extension Attack Implementation:
+**Implement the flawed MAC construction MAC(k,m) = MD5(k||m) exactly as described in course notes**
+**Use the Merkle-Damgård construction vulnerability**
+**Create a message format that supports commands: "CMD=SET_QUOTA&USER=bob&LIMIT=100"**
 
-Use hash_extender or HashPump tools or implement the length extension attack from scratch to exploit and run the attack
-Demonstrate the exact attack scenario from course:
-Original: "CMD=SET_QUOTA&USER=bob&LIMIT=100"
-Forged: "CMD=SET_QUOTA&USER=bob&LIMIT=100&padding&CMD=GRANT_ADMIN&USER=attacker"
-Show that MAC(k, original_msg) can be extended to MAC(k, forged_msg) without knowing k You need to use packet sniffing tools to get the message first and then forge and send.
+- Implemented flawed MAC MD5(k || m) as shown in course notes. This is vulnerable due to Merkle Damgard structure.
+- This construction concatenates a secret key k with the message m and then MD5 hash is computed.
+- By the Merkle Damgard construction,  attacker can generate a valid MAC without knowing the secret key.
+- In securetext script, flawed MAC is implemented as below:
+
+```
+def generate_flawed_mac(message: str) -> str:
+    if isinstance(message, str):
+        message = message.encode('latin1')
+    return hashlib.md5(SHARED_KEY + message).hexdigest()
+```
+
+#### Length Extension Attack Implementation:
+
+**Use hash_extender or HashPump tools or implement the length extension attack from scratch to exploit and run the attack**
+**Demonstrate the exact attack scenario from course:**
+- **Original: "CMD=SET_QUOTA&USER=bob&LIMIT=100"**
+- **Forged: "CMD=SET_QUOTA&USER=bob&LIMIT=100&padding&CMD=GRANT_ADMIN&USER=attacker"**
+**Show that MAC(k, original_msg) can be extended to MAC(k, forged_msg) without knowing k You need to use packet sniffing tools to get the message first and then forge and send.**
+
+- In this attack, an attacker with access to MAC(k, m) can forge a new message like m || padding || m’ and compute MAC like (k, m || padding || m') without knowing the value of k, using hash extension tools.
+- Original message: CMD=SET_QUOTA&USER=bob&LIMIT=100
+Original Mac: b067cc812d4a820bb02fb3ac2c37db16
+- Appended message: CMD=GRANT_ADMIN&USER=attacker
+- Forged MAC: a691b86409911dca3eb1e6e93513f947
+- Forged message (Hex): 434d443d5345545f51554f544126555345523d626f62264c494d49543d313030800000000000000000000000600100000000000026434d443d4752414e545f41444d494e26555345523d61747461636b6572 or CMD=SET_QUOTA&USER=bob&LIMIT=100<PADDING>&CMD=GRANT_ADMIN&USER=attacker
+- Key length: 12 (Guessed length)
+- Tools Used: hash_extender tool to generate the forged message.
+- Wireshark to capture the original MAC.
+![Command and MAC](images/command_and_mac.png)
+
+- Result: The server accepted the forged message even though we did not know the secret key. This confirms successful length extension attack against a MAC using MD5 (key || message).
+![Length Extension Attack - Attacker](images/length_extension_attack_attacker.png)
+![Length Extension Attack - Server](images/length_extension_attack_server.png)
+![Length Extension Attack - Client](images/length_extension_attack_client.png)
 
 
 ### Part D: Secure MAC Implementation
