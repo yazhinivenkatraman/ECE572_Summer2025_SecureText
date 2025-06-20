@@ -107,23 +107,7 @@ class SecureTextServer:
         stored_salt = self.users[username].get('salt')
 
         if not stored_salt:
-            # return False, "Salt missing for user. Migration required."
-            
-            # Updating authentication for legacy users, to successful login and update salt later.
-            legacy_hash = hashlib.sha256(password.encode()).hexdigest()
-
-            if legacy_hash == stored_hash:
-                new_salt = base64.b64encode(os.urandom(16)).decode()
-    
-                # Initially combining salt and password, then hashing using bcrypt
-                salted_password = password + new_salt
-                new_hash = bcrypt.hashpw(salted_password.encode(), bcrypt.gensalt()).decode()
-                self.users[username]['password'] = new_hash
-                self.users[username]['salt'] = new_salt
-                self.save_users()
-                return True, "Authentication successful - Legacy user migrated"
-            else:
-                return False, "Invalid password"
+            return False, "Salt missing for user. Migration required."
             
         # Recreate hash using stored salt
         salted_password = password + stored_salt
@@ -134,7 +118,6 @@ class SecureTextServer:
         else:
             return False, "Invalid password"
 
-    
     def reset_password(self, username, new_password):
         """Basic password reset - just requires existing username"""
         if username not in self.users:

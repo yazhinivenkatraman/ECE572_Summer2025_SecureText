@@ -45,22 +45,17 @@ Keep this section to 1-2 paragraphs.
 ## 1. Introduction
 This report analyzes security and privacy vulnerabilities in the SecureText application, an intentionally insecure console-based messaging app. The primary focus is to identify fundamental security flaws, understand their implications, and lay the groundwork for secure design principles. The work done in this assignment will guide further tasks related to password storage and network message authentication.
 
-### 1.1 Objective
-<!-- Describe the main objectives of this assignment -->
-To identify and document at least five major security and privacy vulnerabilities in the SecureText messenger application through manual testing and code analysis.
-
-### 1.2 Scope
+### 1.1 Scope
 <!-- Define what you implemented and what you focused on -->
-This report focuses on running and exploring the SecureText application and analyzing its vulnerabilities. Subsequent tasks on secure password storage and secure messaging will be completed later.
+This report focuses on running and exploring the SecureText application and analyzing its vulnerabilities. Updating the securetext tool by implementing secured password hashing technique.
 
-### 1.3 Environment Setup
+### 1.2 Environment Setup
 <!-- Briefly describe your development environment -->
-- **Operating System**: Linux (5.15.0-kali2)
+- **Operating System**: Windows 11
 - **Python Version**: 3.10.4
-- **Key Libraries Used**: 
-- **Development Tools**: Wireshark, TCPdump, Python
+- **Key Libraries Used**: hashlib, bcrypt, time, base64, hmac, os
+- **Development Tools**: Wireshark, Python, Hash Extender
 
----
 
 ## 2. Task Implementation
 
@@ -477,8 +472,7 @@ Ensure backward compatibility during the transition
 - Legacy users (with SHA-256 password hash without salting) login when the bcrypt scheme is implemented, after successful authentication, the legacy password will be hashed using bcrypt. 
 - In this process, a new 128-bit salt is generated.
 - Password is rehashed using bcrypt, that is password + salt.
-- The legacy users password and salt are updated in database.
-This ensures backward compatibility.
+- The legacy users password and salt are updated in database. This ensures backward compatibility.
 
 ```
 "test9": {
@@ -488,25 +482,7 @@ This ensures backward compatibility.
     "reset_answer": "blue"
   },
 ```
-
-```
-def authenticate(self, username, password):
-        ...
-        if not stored_salt:
-            # Updating authentication for legacy users, to successful login and update salt later.
-            legacy_hash = hashlib.sha256(password.encode()).hexdigest()
-
-            if legacy_hash == stored_hash:
-                new_salt = base64.b64encode(os.urandom(16)).decode()
-                ...
-            
-        # Recreate hash using stored salt
-        salted_password = password + stored_salt
-
-        # Modern user - verify hashed password using bcrypt
-        if bcrypt.checkpw(salted_password.encode(), stored_hash.encode()):
-            ...
-```
+- After implementing the migration script migration_script_from_plaintext_SHA256.py
 ```
 === Login ===
 Enter username: test9

@@ -3,7 +3,9 @@ import json
 import time
 import bcrypt
 
-
+"""
+Dictionary Attack Simulation: Sample dictionary attack against unsalted hashes
+"""
 # Load users.json file containing SHA-256 hashes (no salt)
 with open("users.json", "r") as f: 
     users = json.load(f)
@@ -25,7 +27,7 @@ for username, details in users.items():
             print("Time taken for finding SHA-256 hashed password is " + str(float(end - start)) + " seconds\n")
             break
     else:
-        print("Password not found in dictionary.")
+        print("Password is not found in dictionary.")
 
 print("\n\n\n--- Testing dictionary attack on salted bcrypt hashes ---")
 
