@@ -759,13 +759,60 @@ Original Mac: b067cc812d4a820bb02fb3ac2c37db16
 
 
 ### Part D: Secure MAC Implementation
-Replace with Secure MAC:
+#### Replace with Secure MAC:
 
-Implement HMAC-SHA256 or another secure MAC construction
-Ensure compatibility with existing message format
-Document why this construction is secure
-Security Analysis:
+**Implement HMAC-SHA256 or another secure MAC construction**
+**Ensure compatibility with existing message format**
+- Here only the MAC generation logic was updated from a vulnerable MD5-based hash to the secure HMAC-SHA256.
+- Input to the MAC function is still a raw string, and the output is still a hexadecimal digest, no changes to the message structure.
+- This ensures backward compatibility with existing message handling logic in the client and server.
 
-Explain why HMAC resists length extension attacks
-Compare the security properties of your implementations
-Discuss key management considerations
+**Document why this construction is secure**
+- To mitigate the previous Length Extension Attack, here I implemented the HMAC-SHA256 which is secured MAC construction than the flawed MAC construction MD5(k || m).
+- HMAC ensures nested hashing construction which is resistance against extension attacks and forgery.
+- HMAC uses a double-hash construction, here the key is padded. This construction ensures the internal hash state is never guessable by an attacker.
+```
+hmac.new(SHARED_KEY, message, hashlib.sha256).hexdigest()
+```
+- HMAC-SHA256 provides strong protection against message tampering due to its internal structure and cryptographic robustness.
+- HMAC internally hashes the key in a padded form and applies a double hash structure.
+- Now with secure MAC construction, messages cannot be forged or extended without knowledge of the secret key.
+
+#### Security Analysis:
+
+**Explain why HMAC resists length extension attacks**
+- HMAC resists length extension attacks by design. Previous MAC function is:
+```
+hashlib.md5(SHARED_KEY + message)
+```
+- This is vulnerable as the attacker can compute MAC without knowing k.
+- HMAC uses a two-layer hash construction.
+```
+HMAC(k, m) = H((k ⊕ opad) || H((k ⊕ ipad) || m))
+```
+- Internal state of the hash cannot be reused by attackers.
+- Message extension attacks are not possible here without knowing the key.
+
+**Compare the security properties of your implementations**
+**Security Comparison: Flawed MD5 vs. HMAC-SHA256**
+| Property | MD5(k || m) (Flawed) | HMAC-SHA256(k, m) (Secure) |
+|----------------------------------|-------------------------------|-------------------------------------------|
+| Hash Function | MD5 (broken) | SHA-256 (secure) |
+| Resists Length Extension? | No | Yes |
+| MAC Integrity | Weak | Strong cryptographic integrity |
+| Collision Resistance | Broken (frequent collisions) | Very high (256-bit hash) |
+| Replay Protection | No | Yes (if combined with nonce/timestamp) |
+| Ease of Forgery | Easy (via padding attacks) | Practically impossible without key |
+| Suitability in production | Unsafe | Industry standard (used in HTTPS, JWT) |
+
+**Discuss key management considerations**
+- Even with a secure MAC like HMAC-SHA256, proper key management is critical.
+- Hardcoded key which is shared across all users.
+```
+SHARED_KEY = b'secretkey123'
+```
+- Key Management Best Practices is to avoid hardcoding keys in source code.
+- Use high-entropy secrets, e.g., 256-bit keys.
+- Should use per-user or per-session keys to isolate compromise impact.
+- MAC key can be stored in a text file with restricted access or from system environmental variable.
+- In production kind of environment, can use a Secret Management Service : AWS Secrets Manager or Azure Key Vault

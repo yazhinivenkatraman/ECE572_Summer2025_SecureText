@@ -19,11 +19,6 @@ import os
 import sys
 import time
 from datetime import datetime
-import hashlib
-import bcrypt
-import time
-import base64
-
 
 class SecureTextServer:
     def __init__(self, host='localhost', port=12345):
@@ -33,7 +28,6 @@ class SecureTextServer:
         self.users = self.load_users()
         self.active_connections = {}  # username -> connection
         self.server_socket = None
-        test_hashing_time()
         
     def load_users(self):
         """Load users from JSON file or create empty dict if file doesn't exist"""
@@ -58,23 +52,9 @@ class SecureTextServer:
         if username in self.users:
             return False, "Username already exists"
         
-        # Hash the password using SHA-256
-        #password_hash = hashlib.sha256(password.encode()).hexdigest()
-
-        # Hash the passeord using bcrypt - generate salting
-        #password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-
-        # Updating password hashing to generate 128-bit (16-byte) and store salt manually.
-        salt = base64.b64encode(os.urandom(16)).decode()
-    
-        # Initially combining salt and password, then hashing using bcrypt
-        salted_password = password + salt
-        password_hash = bcrypt.hashpw(salted_password.encode(), bcrypt.gensalt()).decode()
-
         # SECURITY VULNERABILITY: Storing password in plaintext!
         self.users[username] = {
-            'password': password_hash,  # PLAINTEXT PASSWORD!
-            'salt': salt,
+            'password': password,  # PLAINTEXT PASSWORD!
             'created_at': datetime.now().isoformat(),
             'reset_question': 'What is your favorite color?',
             'reset_answer': 'blue'  # Default for simplicity
@@ -87,28 +67,11 @@ class SecureTextServer:
         if username not in self.users:
             return False, "Username not found"
         
-        # Hash the entered password before comparison
-        #entered_hash = hashlib.sha256(password.encode()).hexdigest()
-        #stored_hash = self.users[username]['password']
-
         # SECURITY VULNERABILITY: Plaintext password comparison!
-        #if entered_hash == stored_hash:
-
-        stored_hash = self.users[username]['password']
-        stored_salt = self.users[username].get('salt')
-
-        if not stored_salt:
-            return False, "Salt missing for user. Migration required."
-            
-        # Recreate hash using stored salt
-        salted_password = password + stored_salt
-
-        # Modern user - verify hashed password using bcrypt
-        if bcrypt.checkpw(salted_password.encode(), stored_hash.encode()):
+        if self.users[username]['password'] == password:
             return True, "Authentication successful"
         else:
             return False, "Invalid password"
-
     
     def reset_password(self, username, new_password):
         """Basic password reset - just requires existing username"""
@@ -116,12 +79,7 @@ class SecureTextServer:
             return False, "Username not found"
         
         # SECURITY VULNERABILITY: No proper verification for password reset!
-        #self.users[username]['password'] = new_password
-
-        # While resetting the password, storing it as bcrypt hashed password
-        new_password_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
-        self.users[username]['password'] = new_password_hash
-
+        self.users[username]['password'] = new_password
         self.save_users()
         return True, "Password reset successful"
     
@@ -435,27 +393,6 @@ class SecureTextClient:
         if self.socket:
             self.socket.close()
         print("Goodbye!")
-
-# Utility function for testing the hashing speed in SHA-256 and bcrypt methods
-def test_hashing_time():
-    check_hash_time = input("Enter 1 to test SHA-256 & bcrypt hashing time orelse enter 0: ")
-    if check_hash_time == "1":
-        # Using sample password to check the timing difference
-        password = "TestP@$$word123"
-
-        # Time taken for SHA-256 hashing technique
-        start = time.time()
-        password_hash = hashlib.sha256(password.encode()).hexdigest() 
-        end = time.time()
-        print("SHA-256 hashing took " + str(float(end - start)) + " seconds")
-
-        # Time taken for Bcrypt hashing technique
-        start = time.time()
-        password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-        end = time.time()
-        print("Bcrypt hashing took " + str(float(end - start)) + " seconds")
-    else:
-        pass
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'server':

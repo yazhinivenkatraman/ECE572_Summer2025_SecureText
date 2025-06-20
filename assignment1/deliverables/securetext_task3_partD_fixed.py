@@ -23,7 +23,22 @@ import hashlib
 import bcrypt
 import time
 import base64
+import hmac
 
+
+# Pre-shared key
+SHARED_KEY = b'secretkey123'
+
+# Helper function for flawed MAC
+def generate_flawed_mac(message: str) -> str:
+    if isinstance(message, str):
+        message = message.encode('latin1')
+    return hashlib.md5(SHARED_KEY + message).hexdigest()
+
+def generate_secure_mac(message: str) -> str:
+    if isinstance(message, str):
+        message = message.encode('utf-8')
+    return hmac.new(SHARED_KEY, message, hashlib.sha256).hexdigest()
 
 class SecureTextServer:
     def __init__(self, host='localhost', port=12345):
@@ -98,7 +113,23 @@ class SecureTextServer:
         stored_salt = self.users[username].get('salt')
 
         if not stored_salt:
-            return False, "Salt missing for user. Migration required."
+            # return False, "Salt missing for user. Migration required."
+            
+            # Updating authentication for legacy users, to successful login and update salt later.
+            legacy_hash = hashlib.sha256(password.encode()).hexdigest()
+
+            if legacy_hash == stored_hash:
+                new_salt = base64.b64encode(os.urandom(16)).decode()
+    
+                # Initially combining salt and password, then hashing using bcrypt
+                salted_password = password + new_salt
+                new_hash = bcrypt.hashpw(salted_password.encode(), bcrypt.gensalt()).decode()
+                self.users[username]['password'] = new_hash
+                self.users[username]['salt'] = new_salt
+                self.save_users()
+                return True, "Authentication successful - Legacy user migrated"
+            else:
+                return False, "Invalid password"
             
         # Recreate hash using stored salt
         salted_password = password + stored_salt
@@ -157,18 +188,25 @@ class SecureTextServer:
                         
                     elif command == 'SEND_MESSAGE':
                         if not current_user:
+                            current_user = message.get('from', 'forged_attacker')
+                            print(f"[DEBUG] Forged sender accepted as: {current_user}")
                             response = {'status': 'error', 'message': 'Not logged in'}
-                        else:
+                        #else:
                             recipient = message.get('recipient')
                             msg_content = message.get('content')
+                            mac = message.get('mac')
                             
                             # Send message to recipient if they're online
-                            if recipient in self.active_connections:
+                            expected_mac = generate_secure_mac(msg_content)
+                            if mac != expected_mac:
+                                response = {'status': 'error', 'message': 'MAC verification failed'}
+                            elif recipient in self.active_connections:
                                 msg_data = {
                                     'type': 'MESSAGE',
                                     'from': current_user,
                                     'content': msg_content,
-                                    'timestamp': datetime.now().isoformat()
+                                    'timestamp': datetime.now().isoformat(),
+                                    'mac': mac
                                 }
                                 try:
                                     self.active_connections[recipient].send(
@@ -281,7 +319,13 @@ class SecureTextClient:
                 if data:
                     message = json.loads(data)
                     if message.get('type') == 'MESSAGE':
-                        print(f"\n[{message['timestamp']}] {message['from']}: {message['content']}")
+                        # Added MAC verification in Client
+                        expected_mac = generate_secure_mac(message['content'])
+                        if message.get('mac') == expected_mac:
+                            print(f"\n[{message['timestamp']}] {message['from']}: {message['content']} (MAC verified)")
+                        else:
+                            print(f"\n[{message['timestamp']}] {message['from']}: {message['content']} (MAC failed)")
+
                         print(">> ", end="", flush=True)
             except:
                 break
@@ -338,16 +382,26 @@ class SecureTextClient:
         
         print("\n=== Send Message ===")
         recipient = input("Enter recipient username: ").strip()
-        content = input("Enter message: ").strip()
+        msg_type = input("Is this a command message? (y/n): ").strip().lower()
+
+        if msg_type == 'y':
+            # Command message
+            content = input("Enter command (e.g., CMD=SET_QUOTA&USER=bob&LIMIT=100): ").strip()
+        else:
+            content = input("Enter regular message: ").strip()
         
         if not recipient or not content:
             print("Recipient and message cannot be empty!")
             return
         
+        # Add MAC for message authentication
+        mac = generate_secure_mac(content)
+        
         command = {
             'command': 'SEND_MESSAGE',
             'recipient': recipient,
-            'content': content
+            'content': content,
+            'mac': mac
         }
         
         response = self.send_command(command)
