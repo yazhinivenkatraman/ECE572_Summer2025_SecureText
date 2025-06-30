@@ -7,7 +7,7 @@
 **Student Name**: Yazhini Venkatraman  
 **Student ID**: V01049681
 **Assignment**: Assignment 1  
-**Date**: 18 June 2025  
+**Date**: 20 June 2025  
 **GitHub Repository**: https://github.com/yazhinivenkatraman/ECE572_Summer2025_SecureText.git
 
 ---
@@ -22,25 +22,21 @@ For Assignment 3: Focus on cryptographic protocols and end-to-end security
 Keep this section to 1-2 paragraphs.
 -->
 
-[Write your executive summary here]
+In this assignment, I explored the intentionally flawed securetext messenger application. This tool is developed using python scripts with available libraries. Using this application, users can create a new user account, login / re-login / logout to the created account, list the online users, send message between users and reset password. After testing, I have identified several vulnerable issues such as plaintext password storage, unauthenticated message sending to other users over network, weak MAC construction using MD5(k||m). All these can lead to dictionary attack, message tampering, and length extension attacks. Each vulnberability were documented with its category and a realistic attack scenario.
+Mitigation solutions to overcome these attacks, I have implemented secure password hashing using both SHA-256 and later migrated to the more secure bcrypt with random 128-bit salts. A standalone migration script is also created to upgrade legacy user accounts to the new secure scheme without altering the main application logic, by ensuring backward compatibility. I have demonstrated length extension attack on flawed MAC construction. Also computed the time difference between fast and slow hashing technique, performed distionary and rainbow table attacks. Overall this assignment strengthens my understand towards application layer vulnerability, cryptographic and practical mitigation strategy. 
 
----
 
 ## Table of Contents
 
 1. [Introduction](#introduction)
+   - [Scope](#scope)
+   - [Environment Setup](#setup)
 2. [Task Implementation](#task-implementation)
    - [Task 1: Security Vulnerability Analysis](#task-x)
    - [Task 2: Securing Passwords at Rest](#task-y)
    - [Task 3: Network Security and Message Authentication](#task-z)
-3. [Security Analysis](#security-analysis)
-4. [Attack Demonstrations](#attack-demonstrations)
-5. [Performance Evaluation](#performance-evaluation)
-6. [Lessons Learned](#lessons-learned)
-7. [Conclusion](#conclusion)
-8. [References](#references)
+3. [Conclusion](#conclusion)
 
----
 
 ## 1. Introduction
 This report analyzes security and privacy vulnerabilities in the SecureText application, an intentionally insecure console-based messaging app. The primary focus is to identify fundamental security flaws, understand their implications, and lay the groundwork for secure design principles. The work done in this assignment will guide further tasks related to password storage and network message authentication.
@@ -58,9 +54,7 @@ This report focuses on running and exploring the SecureText application and anal
 
 
 ## 2. Task Implementation
-
 ### 2.1 Task 1: Security Vulnerability Analysis
-
 ### 2.1.1 Explore the Application:
 
 The SecureText console application was launched and interacted using the terminal.
@@ -792,3 +786,6 @@ SHARED_KEY = b'secretkey123'
 - Should use per-user or per-session keys to isolate compromise impact.
 - MAC key can be stored in a text file with restricted access or from system environmental variable.
 - In production kind of environment, can use a Secret Management Service : AWS Secrets Manager or Azure Key Vault
+
+### Conclusion
+This assignment provides hands-on experiencein identifying and mitigating vulnerabilities in an application, messaging system. By progressively validating, attacking and updating the potential attack parts, I have deepened my knowledge towards secure password storage, message authentication, and cryptographic protocols. Techniques such as bcrypt with salting and HMAC-SHA256—demonstrate how even simple applications benefit strongly. This foundation prepares me to approach future systems with security-first mindset.
