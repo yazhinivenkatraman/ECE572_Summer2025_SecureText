@@ -27,7 +27,21 @@ import hmac
 import pyotp
 import qrcode
 import io
+import requests
+import webbrowser
+from oauth_callback_server import app, get_auth_code
+import threading
+import secrets
+import hashlib
+import base64
 
+
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+
+if not GITHUB_CLIENT_ID or not GITHUB_CLIENT_SECRET:
+    print("Missing GitHub OAuth credentials. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET.")
+    sys.exit(1)
 
 # Pre-shared key
 SHARED_KEY = b'secretkey123'
@@ -236,7 +250,52 @@ class SecureTextServer:
                                 'online_users': online_users,
                                 'all_users': all_users
                             }
-                    
+                    elif command == 'GITHUB_LOGIN':
+                        github_id = message.get('github_id')
+                        github_username = message.get('github_username')
+                        github_email = message.get('github_email')
+
+                        # Try to find matching user by GitHub ID or email
+                        matched_user = None
+                        for username, data in self.users.items():
+                            if data.get('github_id') == github_id or data.get('github_email') == github_email:
+                                matched_user = username
+                                break
+
+                        if matched_user:
+                            # Link if not already linked
+                            self.users[matched_user]['github_id'] = github_id
+                            self.users[matched_user]['github_username'] = github_username
+                            self.users[matched_user]['github_email'] = github_email
+                            self.save_users()
+                            self.active_connections[matched_user] = conn
+                            current_user = matched_user
+                            response = {'status': 'success', 'message': f"Logged in as {matched_user} (GitHub linked)"}
+                        elif github_username in self.users:
+                            existing_user = self.users[github_username]
+                            if "github_id" not in existing_user:
+                                # Safe to link GitHub account to existing local user
+                                existing_user["github_id"] = github_id
+                                existing_user["github_username"] = github_username
+                                existing_user["github_email"] = github_email
+                                self.save_users()
+                                self.active_connections[github_username] = conn
+                                current_user = github_username
+                                response = {'status': 'success', 'message': f"GitHub linked to existing user '{github_username}'"}
+                            else:
+                                response = {'status': 'error', 'message': f"Username '{github_username}' exists and is already linked. Please contact admin."}
+                        else:
+                            # Create a new user linked with GitHub
+                            self.users[github_username] = {
+                            'github_id': github_id,
+                            'github_username': github_username,
+                            'github_email': github_email,
+                            'created_at': datetime.now().isoformat()
+                            }
+                            self.save_users()
+                            self.active_connections[github_username] = conn
+                            current_user = github_username
+                            response = {'status': 'success', 'message': f"New user '{github_username}' created and logged in via GitHub"}
                     else:
                         response = {'status': 'error', 'message': 'Unknown command'}
                     
@@ -437,7 +496,90 @@ class SecureTextClient:
         
         response = self.send_command(command)
         print(f"{response['message']}")
-    
+
+    def login_with_github(self):
+        code_verifier = secrets.token_urlsafe(64)
+        code_challenge = base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest()).rstrip(b'=').decode('ascii')     
+
+        # Step 1: Start Flask server in background
+        threading.Thread(target=lambda: app.run(port=8080, debug=False)).start()
+
+        # Step 2: Build GitHub OAuth URL
+        auth_url = (
+            f"https://github.com/login/oauth/authorize"
+            f"?client_id={GITHUB_CLIENT_ID}"
+            f"&scope=user:email"
+            f"&code_challenge={code_challenge}"
+            f"&code_challenge_method=S256"
+        )
+
+        webbrowser.open(auth_url)
+
+        print("Please complete login in the browser. Waiting for redirect...")
+
+        # Step 3: Wait for the code to be set
+        while not get_auth_code():
+            time.sleep(1)
+
+        code = get_auth_code()
+
+        # Step 4: Exchange code for token
+        token_url = "https://github.com/login/oauth/access_token"
+        headers = {'Accept': 'application/json'}
+        payload = {
+            "client_id": GITHUB_CLIENT_ID,
+            "client_secret": GITHUB_CLIENT_SECRET,
+            "code": code
+        }
+        response = requests.post(token_url, json=payload, headers=headers).json()
+        token = response.get("access_token")
+
+        # Step 5: Fetch user info
+        user_data = requests.get("https://api.github.com/user", headers={
+            "Authorization": f"token {token}"
+        }).json()
+
+        email_data = requests.get("https://api.github.com/user/emails", headers={
+            "Authorization": f"token {token}"
+        }).json()
+
+        github_email = None
+        for item in email_data:
+            if item.get("primary") and item.get("verified"):
+                github_email = item["email"]
+                break
+
+        # Fallback if none found
+        if not github_email:
+            github_email = user_data.get("email", "")
+
+        # Check if GitHub user is already linked to a local user
+        github_id = user_data["id"]
+        github_username = user_data["login"]
+
+        # Request the full user list from server
+        command = {
+            'command': 'GITHUB_LOGIN',
+            'github_id': github_id,
+            'github_username': github_username,
+            'github_email': github_email
+        }
+        response = self.send_command(command)
+
+        if response["status"] == "success":
+            self.logged_in = True
+            self.username = github_username
+            self.running = True
+
+            # Start listening for messages
+            listen_thread = threading.Thread(target=self.listen_for_messages)
+            listen_thread.daemon = True
+            listen_thread.start()
+            print(response["message"])
+        else:
+            print(f"Login error: {response['message']}")
+
+
     def run(self):
         """Main client loop"""
         if not self.connect():
@@ -452,6 +594,7 @@ class SecureTextClient:
                 print("2. Login")
                 print("3. Reset Password")
                 print("4. Exit")
+                print("5. Login with GitHub (OAuth)")
                 choice = input("Choose an option: ").strip()
                 
                 if choice == '1':
@@ -462,6 +605,8 @@ class SecureTextClient:
                     self.reset_password()
                 elif choice == '4':
                     break
+                elif choice == '5':
+                    self.login_with_github()
                 else:
                     print("Invalid choice!")
             else:
